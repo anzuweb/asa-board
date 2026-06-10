@@ -31,7 +31,12 @@
     font-size: clamp(22px, 4vw, 34px);
     color: #ff8c42;
     letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
+  h1 svg { width: 1.3em; height: 1.3em; }
   .progress-wrap {
     width: min(680px, 94vw);
     background: #ffffffcc;
@@ -51,10 +56,13 @@
     align-items: center;
     justify-content: flex-end;
   }
-  .progress-bar span {
-    font-size: 16px;
+  .progress-bar .marker {
+    width: 20px;
+    height: 20px;
     margin-right: 4px;
+    display: none;
   }
+  .progress-bar.walking .marker { display: block; }
 
   .board {
     display: grid;
@@ -65,7 +73,6 @@
     align-content: stretch;
     grid-auto-rows: 1fr;
   }
-  /* iPad landscape: 4 columns; portrait: 2-3 columns handled by auto-fit */
 
   .task {
     background: #fff;
@@ -93,7 +100,11 @@
     color: #c9a87a;
     font-weight: bold;
   }
-  .task .icon { font-size: clamp(44px, 7vw, 64px); line-height: 1; }
+  .task .icon {
+    width: clamp(60px, 9vw, 96px);
+    height: clamp(60px, 9vw, 96px);
+  }
+  .task .icon img { width: 100%; height: 100%; object-fit: contain; }
   .task .label {
     font-size: clamp(16px, 2.6vw, 22px);
     font-weight: bold;
@@ -106,10 +117,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(60px, 9vw, 90px);
     opacity: 0;
     transform: scale(3) rotate(-20deg);
     pointer-events: none;
+  }
+  .task .stamp svg {
+    width: clamp(80px, 12vw, 120px);
+    height: clamp(80px, 12vw, 120px);
   }
   .task.done {
     border-color: #9be59b;
@@ -136,7 +150,11 @@
     text-align: center;
   }
   .celebrate.show { display: flex; }
-  .celebrate .big { font-size: clamp(70px, 14vw, 140px); animation: bounce 1s infinite alternate; }
+  .celebrate .big {
+    width: clamp(240px, 45vw, 440px);
+    animation: bounce 1s infinite alternate;
+  }
+  .celebrate .big img { width: 100%; height: auto; }
   .celebrate h2 {
     font-size: clamp(30px, 6vw, 56px);
     color: #ff8c42;
@@ -152,11 +170,13 @@
   .confetti {
     position: fixed;
     top: -20px;
-    font-size: 28px;
     animation: fall linear forwards;
     z-index: 11;
     pointer-events: none;
   }
+  .confetti.c-circle { width: 14px; height: 14px; border-radius: 50%; }
+  .confetti.c-square { width: 12px; height: 12px; border-radius: 3px; }
+  .confetti.c-ribbon { width: 8px; height: 22px; border-radius: 4px; }
   @keyframes fall {
     to { transform: translateY(110vh) rotate(720deg); }
   }
@@ -182,32 +202,61 @@
 <body>
 
 <header>
-  <h1>🌞 あさのじゅんびボード</h1>
-  <div class="progress-wrap"><div class="progress-bar" id="bar"><span id="barEmoji"></span></div></div>
+  <h1><span id="titleSun"></span>あさのじゅんびボード</h1>
+  <div class="progress-wrap"><div class="progress-bar" id="bar"><span class="marker" id="barMarker"></span></div></div>
 </header>
 
 <main class="board" id="board"></main>
 
 <footer>
-  <button class="reset-btn" id="resetBtn">やりなおす（おうちのひと用）</button>
+  <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
 <div class="celebrate" id="celebrate">
-  <div class="big">🎉</div>
+  <div class="big" id="celebrateIcon"></div>
   <h2>ぜんぶできたね!</h2>
-  <p>すごい!いってらっしゃい!🚌</p>
+  <p>すごい!いってらっしゃい!</p>
 </div>
 
 <script>
+// ===== 手描き風SVGアイコン =====
+const ICONS = {
+  // おひさま(タイトル・お祝いにも使用)
+  sun: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#f4a226" stroke-width="4" stroke-linecap="round">
+      <line x1="32" y1="5" x2="32" y2="13"/><line x1="32" y1="51" x2="32" y2="59"/>
+      <line x1="5" y1="32" x2="13" y2="32"/><line x1="51" y1="32" x2="59" y2="32"/>
+      <line x1="13" y1="13" x2="18.5" y2="18.5"/><line x1="45.5" y1="45.5" x2="51" y2="51"/>
+      <line x1="13" y1="51" x2="18.5" y2="45.5"/><line x1="45.5" y1="18.5" x2="51" y2="13"/>
+    </g>
+    <circle cx="32" cy="32" r="15" fill="#ffd166" stroke="#f4a226" stroke-width="3"/>
+    <circle cx="26.5" cy="30" r="1.8" fill="#8a5a00"/><circle cx="37.5" cy="30" r="1.8" fill="#8a5a00"/>
+    <path d="M26.5 35.5 q5.5 4.5 11 0" stroke="#8a5a00" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <circle cx="23" cy="34" r="2.2" fill="#ffab6b" opacity=".7"/><circle cx="41" cy="34" r="2.2" fill="#ffab6b" opacity=".7"/>
+  </svg>`,
+
+  // 赤い手描き風はなまる(スタンプ)
+  stamp: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 8 q20 -2 22 16 q2 16 -14 22 q-16 6 -26 -6 q-9 -11 -1 -23 q5 -8 14 -9" fill="none" stroke="#e8504a" stroke-width="6.5" stroke-linecap="round"/>
+  </svg>`,
+
+  // 進捗バーのマーカー(おほしさま)
+  star: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2 l2.7 6.3 6.8 0.6 -5.2 4.5 1.6 6.7 -5.9 -3.6 -5.9 3.6 1.6 -6.7 -5.2 -4.5 6.8 -0.6 z" fill="#fff" stroke="#f4a226" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>`,
+
+};
+
 const TASKS = [
-  { id: 'breakfast', icon: '🍚', label: 'あさごはん' },
-  { id: 'teeth',     icon: '🪥', label: 'はみがき' },
-  { id: 'sunscreen', icon: '☀️🧴', label: 'ひやけどめ' },
-  { id: 'clothes',   icon: '👕', label: 'おきがえ' },
-  { id: 'bugspray',  icon: '🦟💨', label: 'むしよけスプレー' },
-  { id: 'toilet',    icon: '🚽', label: 'トイレ' },
-  { id: 'socks',     icon: '🧦', label: 'くつした' },
+  { id: 'breakfast', label: 'あさごはん' },
+  { id: 'teeth',     label: 'はみがき' },
+  { id: 'sunscreen', label: 'ひやけどめ' },
+  { id: 'clothes',   label: 'おきがえ' },
+  { id: 'bugspray',  label: 'むしよけ<br>スプレー' },
+  { id: 'toilet',    label: 'トイレ' },
+  { id: 'socks',     label: 'くつした' },
 ];
+// タスクのアイコン画像は images/<id>.png
 const KEY = 'asaboard-v1';
 
 function todayStr() {
@@ -251,8 +300,11 @@ function beep(freqs, dur = 0.12, gap = 0.1) {
 
 const board = document.getElementById('board');
 const bar = document.getElementById('bar');
-const barEmoji = document.getElementById('barEmoji');
 const celebrate = document.getElementById('celebrate');
+
+document.getElementById('titleSun').innerHTML = ICONS.sun;
+document.getElementById('barMarker').innerHTML = ICONS.star;
+document.getElementById('celebrateIcon').innerHTML = '<img src="images/celebrate.png" alt="">';
 
 function render() {
   board.innerHTML = '';
@@ -261,9 +313,9 @@ function render() {
     div.className = 'task' + (state.done[t.id] ? ' done' : '');
     div.innerHTML = `
       <span class="num">${i + 1}</span>
-      <span class="icon">${t.icon}</span>
+      <span class="icon"><img src="images/${t.id}.png" alt=""></span>
       <span class="label">${t.label}</span>
-      <span class="stamp">⭕</span>`;
+      <span class="stamp">${ICONS.stamp}</span>`;
     div.addEventListener('pointerdown', () => toggle(t.id));
     board.appendChild(div);
   });
@@ -289,17 +341,18 @@ function allDone() {
 function updateProgress() {
   const n = TASKS.filter(t => state.done[t.id]).length;
   bar.style.width = (n / TASKS.length * 100) + '%';
-  barEmoji.textContent = n > 0 ? '🚶‍♀️' : '';
+  bar.classList.toggle('walking', n > 0);
 }
 
 function showCelebrate() {
   celebrate.classList.add('show');
   beep([523, 659, 784, 1047], 0.25, 0.15);
-  const emojis = ['🎉', '⭐', '🌸', '💛', '✨', '🎈'];
+  const colors = ['#ff8c42', '#ffd166', '#e88aa5', '#7fd1e8', '#a5e09a', '#b89ae0'];
+  const shapes = ['c-circle', 'c-square', 'c-ribbon'];
   for (let i = 0; i < 40; i++) {
     const c = document.createElement('div');
-    c.className = 'confetti';
-    c.textContent = emojis[i % emojis.length];
+    c.className = 'confetti ' + shapes[i % shapes.length];
+    c.style.background = colors[i % colors.length];
     c.style.left = Math.random() * 100 + 'vw';
     c.style.animationDuration = (2 + Math.random() * 2) + 's';
     c.style.animationDelay = Math.random() * 1.5 + 's';
