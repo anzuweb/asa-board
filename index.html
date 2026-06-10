@@ -280,10 +280,29 @@ function saveState() {
 }
 
 // 効果音(Web Audio・タップ時にピコン、コンプリートでファンファーレ)
+// iOSは指を離した操作(touchend/click)でしか音声を解錠できないため、
+// 最初のタップ完了時にAudioContextを作成・resumeしておく
 let audioCtx = null;
+function unlockAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+['touchend', 'pointerup', 'click'].forEach(ev =>
+  document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
+
 function beep(freqs, dur = 0.12, gap = 0.1) {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => play());
+    } else {
+      play();
+    }
+  } catch (e) {}
+
+  function play() {
     freqs.forEach((f, i) => {
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
@@ -295,7 +314,7 @@ function beep(freqs, dur = 0.12, gap = 0.1) {
       o.start(audioCtx.currentTime + i * gap);
       o.stop(audioCtx.currentTime + i * gap + dur);
     });
-  } catch (e) {}
+  }
 }
 
 const board = document.getElementById('board');
