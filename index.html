@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>あさのじゅんびボード</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Rounded Mplus 1c", sans-serif;
+    background: linear-gradient(160deg, #fff9e6 0%, #ffeef5 50%, #e8f7ff 100%);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: clamp(22px, 4vw, 34px);
+    color: #ff8c42;
+    letter-spacing: 2px;
+  }
+  .progress-wrap {
+    width: min(680px, 94vw);
+    background: #ffffffcc;
+    border-radius: 999px;
+    height: 26px;
+    margin: 8px auto 14px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.08);
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ffd166, #ff8c42);
+    border-radius: 999px;
+    transition: width .5s cubic-bezier(.34,1.56,.64,1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .progress-bar span {
+    font-size: 16px;
+    margin-right: 4px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    width: min(900px, 96vw);
+    flex: 1;
+    align-content: stretch;
+    grid-auto-rows: 1fr;
+  }
+  /* iPad landscape: 4 columns; portrait: 2-3 columns handled by auto-fit */
+
+  .task {
+    background: #fff;
+    border: 4px solid #ffe0b3;
+    border-radius: 24px;
+    padding: 18px 10px 14px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #f0d9b8;
+    transition: transform .15s, opacity .3s, border-color .3s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 150px;
+    justify-content: center;
+  }
+  .task:active { transform: scale(.94); }
+  .task .num {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 15px;
+    color: #c9a87a;
+    font-weight: bold;
+  }
+  .task .icon { font-size: clamp(44px, 7vw, 64px); line-height: 1; }
+  .task .label {
+    font-size: clamp(16px, 2.6vw, 22px);
+    font-weight: bold;
+    color: #5b4a3a;
+    letter-spacing: 1px;
+  }
+  .task .stamp {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(60px, 9vw, 90px);
+    opacity: 0;
+    transform: scale(3) rotate(-20deg);
+    pointer-events: none;
+  }
+  .task.done {
+    border-color: #9be59b;
+    background: #f2fff2;
+    box-shadow: 0 4px 0 #c0e8c0;
+  }
+  .task.done .icon, .task.done .label { opacity: .35; }
+  .task.done .stamp {
+    opacity: 1;
+    transform: scale(1) rotate(-10deg);
+    transition: transform .35s cubic-bezier(.34,1.8,.64,1), opacity .2s;
+  }
+
+  /* ぜんぶできた!オーバーレイ */
+  .celebrate {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 250, 230, .96);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    text-align: center;
+  }
+  .celebrate.show { display: flex; }
+  .celebrate .big { font-size: clamp(70px, 14vw, 140px); animation: bounce 1s infinite alternate; }
+  .celebrate h2 {
+    font-size: clamp(30px, 6vw, 56px);
+    color: #ff8c42;
+    margin: 16px 0 8px;
+    letter-spacing: 3px;
+  }
+  .celebrate p { font-size: clamp(18px, 3vw, 28px); color: #5b4a3a; }
+  @keyframes bounce {
+    from { transform: translateY(0) scale(1); }
+    to   { transform: translateY(-24px) scale(1.08); }
+  }
+
+  .confetti {
+    position: fixed;
+    top: -20px;
+    font-size: 28px;
+    animation: fall linear forwards;
+    z-index: 11;
+    pointer-events: none;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); }
+  }
+
+  footer {
+    margin-top: 10px;
+    width: min(900px, 96vw);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .reset-btn {
+    border: none;
+    background: #ffffff99;
+    color: #b8a890;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌞 あさのじゅんびボード</h1>
+  <div class="progress-wrap"><div class="progress-bar" id="bar"><span id="barEmoji"></span></div></div>
+</header>
+
+<main class="board" id="board"></main>
+
+<footer>
+  <button class="reset-btn" id="resetBtn">やりなおす（おうちのひと用）</button>
+</footer>
+
+<div class="celebrate" id="celebrate">
+  <div class="big">🎉</div>
+  <h2>ぜんぶできたね!</h2>
+  <p>すごい!いってらっしゃい!🚌</p>
+</div>
+
+<script>
+const TASKS = [
+  { id: 'breakfast', icon: '🍚', label: 'あさごはん' },
+  { id: 'teeth',     icon: '🪥', label: 'はみがき' },
+  { id: 'sunscreen', icon: '☀️🧴', label: 'ひやけどめ' },
+  { id: 'clothes',   icon: '👕', label: 'おきがえ' },
+  { id: 'bugspray',  icon: '🦟💨', label: 'むしよけスプレー' },
+  { id: 'toilet',    icon: '🚽', label: 'トイレ' },
+  { id: 'socks',     icon: '🧦', label: 'くつした' },
+];
+const KEY = 'asaboard-v1';
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && s.date === todayStr()) return s;
+  } catch (e) {}
+  return { date: todayStr(), done: {} };
+}
+
+let state = loadState();
+
+function saveState() {
+  state.date = todayStr();
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+// 効果音(Web Audio・タップ時にピコン、コンプリートでファンファーレ)
+let audioCtx = null;
+function beep(freqs, dur = 0.12, gap = 0.1) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.25, audioCtx.currentTime + i * gap);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * gap + dur);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(audioCtx.currentTime + i * gap);
+      o.stop(audioCtx.currentTime + i * gap + dur);
+    });
+  } catch (e) {}
+}
+
+const board = document.getElementById('board');
+const bar = document.getElementById('bar');
+const barEmoji = document.getElementById('barEmoji');
+const celebrate = document.getElementById('celebrate');
+
+function render() {
+  board.innerHTML = '';
+  TASKS.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'task' + (state.done[t.id] ? ' done' : '');
+    div.innerHTML = `
+      <span class="num">${i + 1}</span>
+      <span class="icon">${t.icon}</span>
+      <span class="label">${t.label}</span>
+      <span class="stamp">⭕</span>`;
+    div.addEventListener('pointerdown', () => toggle(t.id));
+    board.appendChild(div);
+  });
+  updateProgress();
+}
+
+function toggle(id) {
+  const wasDone = !!state.done[id];
+  state.done[id] = !wasDone;
+  if (!state.done[id]) delete state.done[id];
+  saveState();
+  render();
+  if (!wasDone) {
+    beep([880, 1320]);
+    if (allDone()) setTimeout(showCelebrate, 350);
+  }
+}
+
+function allDone() {
+  return TASKS.every(t => state.done[t.id]);
+}
+
+function updateProgress() {
+  const n = TASKS.filter(t => state.done[t.id]).length;
+  bar.style.width = (n / TASKS.length * 100) + '%';
+  barEmoji.textContent = n > 0 ? '🚶‍♀️' : '';
+}
+
+function showCelebrate() {
+  celebrate.classList.add('show');
+  beep([523, 659, 784, 1047], 0.25, 0.15);
+  const emojis = ['🎉', '⭐', '🌸', '💛', '✨', '🎈'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = emojis[i % emojis.length];
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.animationDuration = (2 + Math.random() * 2) + 's';
+    c.style.animationDelay = Math.random() * 1.5 + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5000);
+  }
+}
+
+celebrate.addEventListener('pointerdown', () => celebrate.classList.remove('show'));
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('チェックをぜんぶリセットする?')) {
+    state = { date: todayStr(), done: {} };
+    saveState();
+    render();
+  }
+});
+
+// 日付が変わったら自動リセット(画面を開きっぱなしでも復帰時にチェック)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state.date !== todayStr()) {
+    state = { date: todayStr(), done: {} };
+    saveState();
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
