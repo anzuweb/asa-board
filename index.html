@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="じゅんびボード">
@@ -12,6 +12,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
+  /* ビューポート誤認時の余白帯も背景と馴染ませる */
+  html { background: #ffeef5; }
   body {
     font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Rounded Mplus 1c", sans-serif;
     background: linear-gradient(160deg, #fff9e6 0%, #ffeef5 50%, #e8f7ff 100%);
@@ -198,6 +200,12 @@
     width: min(1100px, 96vw);
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+  }
+  .version {
+    font-size: 11px;
+    color: #c9bca8;
   }
   .reset-btn {
     border: none;
@@ -221,6 +229,7 @@
 <main class="board" id="board"></main>
 
 <footer>
+  <span class="version">v1.1</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
