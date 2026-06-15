@@ -253,18 +253,20 @@
   body.night .celebrate h2 { color: #ffe08a; }
   body.night .celebrate p { color: #e7e3ff; }
 
-  /* 夜のお星さま(背景) */
-  #stars { position: fixed; inset: 0; z-index: -1; pointer-events: none; display: none; }
+  /* 夜のお星さま(背景・コンテンツの裏側) */
+  #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; display: none; }
   body.night #stars { display: block; }
+  body header, body .board, body footer { position: relative; z-index: 1; }
   #stars span {
     position: absolute;
     border-radius: 50%;
     background: #fff;
+    box-shadow: 0 0 5px 1px rgba(255, 255, 255, .7);
     animation: twinkle 2.4s infinite;
   }
   @keyframes twinkle {
-    0%, 100% { opacity: .2; }
-    50% { opacity: .9; }
+    0%, 100% { opacity: .15; }
+    50% { opacity: 1; }
   }
 
   footer {
@@ -307,7 +309,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v1.7</span>
+  <span class="version">v1.8</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
