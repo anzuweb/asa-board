@@ -207,6 +207,7 @@
 
   /* 朝/夜きりかえトグル */
   .mode-toggle {
+    position: relative;
     display: inline-flex;
     gap: 4px;
     padding: 4px;
@@ -216,6 +217,8 @@
     box-shadow: inset 0 2px 5px rgba(0,0,0,.06);
   }
   .mode-btn {
+    position: relative;
+    z-index: 1;
     border: none;
     background: transparent;
     font-family: inherit;
@@ -231,10 +234,18 @@
   }
   .mode-btn .mode-ic { width: 1.2em; height: 1.2em; display: inline-flex; }
   .mode-btn .mode-ic svg { width: 100%; height: 100%; }
-  .mode-btn.active {
+  .mode-btn.active { color: #fff; }
+  /* スライドする選択中インジケータ(つまみ) */
+  .toggle-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 999px;
     background: #ff8c42;
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(255,140,66,.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,.18);
+    transition: transform .32s cubic-bezier(.34,1.45,.64,1), width .32s, background-color .32s;
+    z-index: 0;
+    pointer-events: none;
   }
   /* 選択中はアイコンも白にして背景と同化しないようにする */
   .mode-btn.active .mode-ic svg * { fill: #fff; stroke: #fff; }
@@ -247,10 +258,7 @@
   body.night .task.done { border-color: #9be59b; box-shadow: 0 4px 0 #5f8f5f; }
   body.night .version { color: #ffffff66; }
   body.night .reset-btn { background: #ffffffe6; color: #5a4f87; }
-  body.night .mode-btn.active {
-    background: #7a6ad6;
-    box-shadow: 0 2px 6px rgba(122,106,214,.4);
-  }
+  /* 夜の選択色はJSでつまみに設定 */
   body.night .progress-bar { background: linear-gradient(90deg, #b3a4ec, #7a6ad6); }
   body.night .celebrate { background: rgba(40, 44, 80, .96); }
   body.night .celebrate h2 { color: #ffe08a; }
@@ -347,6 +355,7 @@
 
 <header>
   <div class="mode-toggle">
+    <span class="toggle-thumb" id="toggleThumb"></span>
     <button class="mode-btn" data-mode="morning"><span class="mode-ic" id="mtSun"></span>あさ</button>
     <button class="mode-btn" data-mode="night"><span class="mode-ic" id="mtMoon"></span>よる</button>
   </div>
@@ -357,7 +366,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v2.6</span>
+  <span class="version">v2.7</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -507,6 +516,7 @@ const board = document.getElementById('board');
 const bar = document.getElementById('bar');
 const celebrate = document.getElementById('celebrate');
 const titleTextEl = document.getElementById('titleText');
+const thumb = document.getElementById('toggleThumb');
 
 document.getElementById('barMarker').innerHTML = ICONS.star;
 document.getElementById('mtSun').innerHTML = ICONS.sun;
@@ -545,7 +555,25 @@ function applyMode() {
   board.style.setProperty('--cols', Math.min(b.tasks.length, 4));
   document.querySelectorAll('.mode-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.mode === mode));
+  placeThumb();
 }
+
+// 選択中のつまみを、選択ボタンの位置・大きさに合わせて配置(切替時はスライド)
+let firstThumb = true;
+function placeThumb() {
+  const b = document.querySelector('.mode-btn.active');
+  if (!b) return;
+  const cs = getComputedStyle(thumb.parentElement);
+  const padL = parseFloat(cs.paddingLeft) || 0;
+  const padT = parseFloat(cs.paddingTop) || 0;
+  if (firstThumb) thumb.style.transition = 'none';
+  thumb.style.width = b.offsetWidth + 'px';
+  thumb.style.height = b.offsetHeight + 'px';
+  thumb.style.transform = `translate(${b.offsetLeft - padL}px, ${b.offsetTop - padT}px)`;
+  thumb.style.background = mode === 'night' ? '#7a6ad6' : '#ff8c42';
+  if (firstThumb) { void thumb.offsetWidth; thumb.style.transition = ''; firstThumb = false; }
+}
+window.addEventListener('resize', placeThumb);
 
 function render() {
   const done = curDone();
