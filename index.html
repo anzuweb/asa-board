@@ -257,13 +257,20 @@
   #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; display: none; }
   body.night #stars { display: block; }
   body header, body .board, body footer { position: relative; z-index: 1; }
-  #stars span {
+  #stars .star {
     position: absolute;
     border-radius: 50%;
     background: #fff;
     box-shadow: 0 0 5px 1px rgba(255, 255, 255, .7);
     animation: twinkle 2.4s infinite;
   }
+  #stars .moon {
+    position: absolute;
+    top: 6px;
+    right: 16px;
+    width: clamp(80px, 11vw, 130px);
+  }
+  #stars .moon svg { width: 100%; height: auto; }
   @keyframes twinkle {
     0%, 100% { opacity: .15; }
     50% { opacity: 1; }
@@ -324,7 +331,7 @@
 </head>
 <body>
 
-<div id="stars"></div>
+<div id="stars"><span class="moon" id="skyMoon"></span></div>
 <div id="sky">
   <span class="sun" id="skySun"></span>
   <span class="cloud cloud1"></span>
@@ -344,7 +351,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v1.9</span>
+  <span class="version">v2.0</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -499,11 +506,13 @@ const titleTextEl = document.getElementById('titleText');
 document.getElementById('barMarker').innerHTML = ICONS.star;
 document.getElementById('mtSun').innerHTML = ICONS.sun;
 document.getElementById('skySun').innerHTML = ICONS.sun;
+document.getElementById('skyMoon').innerHTML = ICONS.moon;
 
 // 夜の背景に星をちりばめる
 const starsEl = document.getElementById('stars');
 for (let i = 0; i < 18; i++) {
   const s = document.createElement('span');
+  s.className = 'star';
   const sz = 2 + Math.random() * 2.5;
   s.style.width = s.style.height = sz + 'px';
   s.style.left = Math.random() * 100 + 'vw';
