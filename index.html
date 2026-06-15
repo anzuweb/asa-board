@@ -357,7 +357,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v2.5</span>
+  <span class="version">v2.6</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -513,20 +513,28 @@ document.getElementById('mtSun').innerHTML = ICONS.sun;
 document.getElementById('skySun').innerHTML = ICONS.sun;
 document.getElementById('skyMoon').innerHTML = ICONS.moon;
 
-// 夜の背景に星をちりばめる(上の方に多めに散らす)
+// 夜の背景の星(位置は固定。各要素 [left(vw), top(vh), size(px), 点滅秒, 開始遅延秒])
+const STAR_LAYOUT = [
+  [5, 6, 3, 2.4, 0], [12, 18, 2.5, 2.8, 0.6], [19, 9, 3.5, 2, 1.2], [27, 22, 2, 2.6, 0.3],
+  [34, 5, 3, 2.2, 1.5], [41, 28, 2.5, 3, 0.9], [48, 12, 4, 1.9, 0.4], [55, 24, 2, 2.7, 1.1],
+  [62, 7, 3, 2.3, 0.2], [69, 19, 2.5, 2.9, 1.7], [76, 30, 3.5, 2.1, 0.7], [83, 11, 2, 2.5, 1.3],
+  [90, 25, 3, 2, 0.5], [96, 15, 2.5, 2.8, 1], [8, 32, 2, 2.4, 1.8], [44, 3, 3, 2.6, 0.8],
+  [3, 48, 2.5, 2.7, 0.3], [15, 62, 3, 2.2, 1.4], [24, 80, 2, 2.9, 0.6], [37, 55, 3.5, 2, 1],
+  [7, 88, 2.5, 2.5, 1.6], [52, 72, 2, 2.8, 0.4], [60, 90, 3, 2.3, 1.2], [71, 60, 2.5, 2.6, 0.9],
+  [83, 78, 2, 3, 0.2], [92, 55, 3.5, 2.1, 1.5], [97, 84, 2.5, 2.4, 0.7], [46, 92, 2, 2.7, 1.1],
+  [30, 68, 3, 2.2, 1.8], [88, 40, 2.5, 2.9, 0.5],
+];
 const starsEl = document.getElementById('stars');
-for (let i = 0; i < 30; i++) {
+STAR_LAYOUT.forEach(([l, t, sz, dur, dl]) => {
   const s = document.createElement('span');
   s.className = 'star';
-  const sz = 2 + Math.random() * 2.5;
   s.style.width = s.style.height = sz + 'px';
-  s.style.left = Math.random() * 100 + 'vw';
-  // 半分は画面上部(0〜35vh)、残りは全体に散らす
-  s.style.top = (i % 2 === 0 ? Math.random() * 35 : Math.random() * 100) + 'vh';
-  s.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
-  s.style.animationDelay = Math.random() * 2 + 's';
+  s.style.left = l + 'vw';
+  s.style.top = t + 'vh';
+  s.style.animationDuration = dur + 's';
+  s.style.animationDelay = dl + 's';
   starsEl.appendChild(s);
-}
+});
 document.getElementById('mtMoon').innerHTML = ICONS.moon;
 
 function applyMode() {
