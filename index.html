@@ -287,7 +287,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v1.3</span>
+  <span class="version">v1.4</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -339,6 +339,7 @@ const BOARDS = {
     title: 'あさのじゅんびボード',
     titleIcon: ICONS.sun,
     cheer: 'すごい!いってらっしゃい!',
+    celebrateImg: 'images/celebrate.png',
     tasks: [
       { id: 'breakfast', label: 'あさごはん' },
       { id: 'teeth',     label: 'はみがき' },
@@ -354,6 +355,7 @@ const BOARDS = {
     title: 'よるのじゅんびボード',
     titleIcon: ICONS.moon,
     cheer: 'すごい!おやすみなさい!',
+    celebrateImg: 'images/celebrate-night.png',
     tasks: [
       { id: 'teeth',  label: 'はみがき' },
       { id: 'floss',  label: 'いとようじ' },
@@ -438,7 +440,6 @@ const titleIconEl = document.getElementById('titleIcon');
 const titleTextEl = document.getElementById('titleText');
 
 document.getElementById('barMarker').innerHTML = ICONS.star;
-document.getElementById('celebrateIcon').innerHTML = '<img src="images/celebrate.png" alt="">';
 document.getElementById('mtSun').innerHTML = ICONS.sun;
 document.getElementById('mtMoon').innerHTML = ICONS.moon;
 
@@ -497,6 +498,7 @@ function updateProgress() {
 }
 
 function showCelebrate() {
+  document.getElementById('celebrateIcon').innerHTML = '<img src="' + BOARDS[mode].celebrateImg + '" alt="">';
   document.getElementById('celebrateMsg').textContent = BOARDS[mode].cheer;
   celebrate.classList.add('show');
   beep([523, 659, 784, 1047], 0.25, 0.15);
