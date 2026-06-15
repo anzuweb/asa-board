@@ -366,7 +366,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v2.7</span>
+  <span class="version">v2.8</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -563,13 +563,10 @@ let firstThumb = true;
 function placeThumb() {
   const b = document.querySelector('.mode-btn.active');
   if (!b) return;
-  const cs = getComputedStyle(thumb.parentElement);
-  const padL = parseFloat(cs.paddingLeft) || 0;
-  const padT = parseFloat(cs.paddingTop) || 0;
   if (firstThumb) thumb.style.transition = 'none';
   thumb.style.width = b.offsetWidth + 'px';
   thumb.style.height = b.offsetHeight + 'px';
-  thumb.style.transform = `translate(${b.offsetLeft - padL}px, ${b.offsetTop - padT}px)`;
+  thumb.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
   thumb.style.background = mode === 'night' ? '#7a6ad6' : '#ff8c42';
   if (firstThumb) { void thumb.offsetWidth; thumb.style.transition = ''; firstThumb = false; }
 }
@@ -668,6 +665,13 @@ document.addEventListener('visibilitychange', () => {
 applyMode();
 
 render();
+
+// オフライン用Service Worker(ネット不安定時もイラストが消えないように)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
