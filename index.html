@@ -269,6 +269,35 @@
     50% { opacity: 1; }
   }
 
+  /* 朝のおひさま・くも(背景・コンテンツの裏側) */
+  #sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; display: none; overflow: hidden; }
+  body:not(.night) #sky { display: block; }
+  #sky .sun {
+    position: absolute;
+    top: -18px;
+    right: 6px;
+    width: clamp(100px, 13vw, 168px);
+    opacity: .9;
+  }
+  #sky .sun svg { width: 100%; height: auto; }
+  #sky .cloud {
+    position: absolute;
+    width: 64px;
+    height: 24px;
+    background: #fff;
+    border-radius: 999px;
+    opacity: .85;
+    box-shadow: 20px 7px 0 -4px #fff, -20px 7px 0 -2px #fff;
+    animation: drift 9s ease-in-out infinite alternate;
+  }
+  #sky .cloud1 { top: 16%; left: 5%; }
+  #sky .cloud2 { top: 30%; right: 9%; transform: scale(.8); animation-duration: 12s; }
+  #sky .cloud3 { bottom: 8%; left: 12%; transform: scale(.9); animation-duration: 11s; }
+  @keyframes drift {
+    from { margin-left: -12px; }
+    to { margin-left: 12px; }
+  }
+
   footer {
     margin-top: 10px;
     width: min(1100px, 96vw);
@@ -296,6 +325,12 @@
 <body>
 
 <div id="stars"></div>
+<div id="sky">
+  <span class="sun" id="skySun"></span>
+  <span class="cloud cloud1"></span>
+  <span class="cloud cloud2"></span>
+  <span class="cloud cloud3"></span>
+</div>
 
 <header>
   <div class="mode-toggle">
@@ -309,7 +344,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v1.8</span>
+  <span class="version">v1.9</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -463,6 +498,7 @@ const titleTextEl = document.getElementById('titleText');
 
 document.getElementById('barMarker').innerHTML = ICONS.star;
 document.getElementById('mtSun').innerHTML = ICONS.sun;
+document.getElementById('skySun').innerHTML = ICONS.sun;
 
 // 夜の背景に星をちりばめる
 const starsEl = document.getElementById('stars');
