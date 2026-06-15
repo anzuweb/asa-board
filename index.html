@@ -13,10 +13,10 @@
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
   /* ビューポート誤認時の余白帯も背景と馴染ませる */
-  html { background: #ffeef5; }
+  html { background: #ddf1ff; }
   body {
     font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Rounded Mplus 1c", sans-serif;
-    background: linear-gradient(160deg, #fff9e6 0%, #ffeef5 50%, #e8f7ff 100%);
+    background: linear-gradient(160deg, #bfe6ff 0%, #ddf1ff 50%, #eef9ff 100%);
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
@@ -238,16 +238,34 @@
   }
 
   /* 夜テーマ */
-  html.night { background: #efe6f7; }
-  body.night { background: linear-gradient(160deg, #e7ecff 0%, #efe6f7 50%, #ffe9f2 100%); }
-  body.night h1 { color: #6f5fc9; }
+  html.night { background: #232845; }
+  body.night { background: linear-gradient(160deg, #2a2f55 0%, #353a63 55%, #46406b 100%); }
+  body.night h1 { color: #fff; }
+  body.night .task { border-color: #7a8fe0; box-shadow: 0 4px 0 #4a5699; }
+  body.night .task.done { border-color: #9be59b; box-shadow: 0 4px 0 #5f8f5f; }
+  body.night .version { color: #ffffff66; }
   body.night .mode-btn.active {
     background: #7a6ad6;
     box-shadow: 0 2px 6px rgba(122,106,214,.4);
   }
   body.night .progress-bar { background: linear-gradient(90deg, #b3a4ec, #7a6ad6); }
-  body.night .celebrate { background: rgba(235, 232, 250, .96); }
-  body.night .celebrate h2 { color: #6f5fc9; }
+  body.night .celebrate { background: rgba(40, 44, 80, .96); }
+  body.night .celebrate h2 { color: #ffe08a; }
+  body.night .celebrate p { color: #e7e3ff; }
+
+  /* 夜のお星さま(背景) */
+  #stars { position: fixed; inset: 0; z-index: -1; pointer-events: none; display: none; }
+  body.night #stars { display: block; }
+  #stars span {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    animation: twinkle 2.4s infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: .2; }
+    50% { opacity: .9; }
+  }
 
   footer {
     margin-top: 10px;
@@ -275,6 +293,8 @@
 </head>
 <body>
 
+<div id="stars"></div>
+
 <header>
   <div class="mode-toggle">
     <button class="mode-btn" data-mode="morning"><span class="mode-ic" id="mtSun"></span>あさ</button>
@@ -287,7 +307,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v1.6</span>
+  <span class="version">v1.7</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -441,6 +461,19 @@ const titleTextEl = document.getElementById('titleText');
 
 document.getElementById('barMarker').innerHTML = ICONS.star;
 document.getElementById('mtSun').innerHTML = ICONS.sun;
+
+// 夜の背景に星をちりばめる
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 18; i++) {
+  const s = document.createElement('span');
+  const sz = 2 + Math.random() * 2.5;
+  s.style.width = s.style.height = sz + 'px';
+  s.style.left = Math.random() * 100 + 'vw';
+  s.style.top = Math.random() * 100 + 'vh';
+  s.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
+  s.style.animationDelay = Math.random() * 2 + 's';
+  starsEl.appendChild(s);
+}
 document.getElementById('mtMoon').innerHTML = ICONS.moon;
 
 function applyMode() {
