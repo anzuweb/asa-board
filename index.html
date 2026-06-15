@@ -236,6 +236,8 @@
     color: #fff;
     box-shadow: 0 2px 6px rgba(255,140,66,.4);
   }
+  /* 選択中はアイコンも白にして背景と同化しないようにする */
+  .mode-btn.active .mode-ic svg * { fill: #fff; stroke: #fff; }
 
   /* 夜テーマ */
   html.night { background: #232845; }
@@ -354,7 +356,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v2.3</span>
+  <span class="version">v2.4</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
