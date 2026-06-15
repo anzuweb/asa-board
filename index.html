@@ -82,7 +82,7 @@
   @media (min-width: 700px) {
     body { height: 100%; overflow: hidden; }
     .board {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(var(--cols, 4), 1fr);
       min-height: 0;
     }
     .task { min-height: 0; }
@@ -205,6 +205,50 @@
     to { transform: translateY(110vh) rotate(720deg); }
   }
 
+  /* 朝/夜きりかえトグル */
+  .mode-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: #ffffffcc;
+    border-radius: 999px;
+    margin-bottom: 8px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.06);
+  }
+  .mode-btn {
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: clamp(15px, 2.2vw, 20px);
+    font-weight: bold;
+    color: #b8a890;
+    padding: 8px 22px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mode-btn .mode-ic { width: 1.2em; height: 1.2em; display: inline-flex; }
+  .mode-btn .mode-ic svg { width: 100%; height: 100%; }
+  .mode-btn.active {
+    background: #ff8c42;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(255,140,66,.4);
+  }
+
+  /* 夜テーマ */
+  html.night { background: #efe6f7; }
+  body.night { background: linear-gradient(160deg, #e7ecff 0%, #efe6f7 50%, #ffe9f2 100%); }
+  body.night h1 { color: #6f5fc9; }
+  body.night .mode-btn.active {
+    background: #7a6ad6;
+    box-shadow: 0 2px 6px rgba(122,106,214,.4);
+  }
+  body.night .progress-bar { background: linear-gradient(90deg, #b3a4ec, #7a6ad6); }
+  body.night .celebrate { background: rgba(235, 232, 250, .96); }
+  body.night .celebrate h2 { color: #6f5fc9; }
+
   footer {
     margin-top: 10px;
     width: min(1100px, 96vw);
@@ -232,21 +276,25 @@
 <body>
 
 <header>
-  <h1><span id="titleSun"></span>あさのじゅんびボード</h1>
+  <div class="mode-toggle">
+    <button class="mode-btn" data-mode="morning"><span class="mode-ic" id="mtSun"></span>あさ</button>
+    <button class="mode-btn" data-mode="night"><span class="mode-ic" id="mtMoon"></span>よる</button>
+  </div>
+  <h1><span id="titleIcon"></span><span id="titleText">あさのじゅんびボード</span></h1>
   <div class="progress-wrap"><div class="progress-bar" id="bar"><span class="marker" id="barMarker"></span></div></div>
 </header>
 
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v1.2</span>
+  <span class="version">v1.3</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
 <div class="celebrate" id="celebrate">
   <div class="big" id="celebrateIcon"></div>
   <h2>ぜんぶできたね!</h2>
-  <p>すごい!いってらっしゃい!</p>
+  <p id="celebrateMsg">すごい!いってらっしゃい!</p>
 </div>
 
 <script>
@@ -276,40 +324,74 @@ const ICONS = {
     <path d="M12 2 l2.7 6.3 6.8 0.6 -5.2 4.5 1.6 6.7 -5.9 -3.6 -5.9 3.6 1.6 -6.7 -5.2 -4.5 6.8 -0.6 z" fill="#fff" stroke="#f4a226" stroke-width="1.5" stroke-linejoin="round"/>
   </svg>`,
 
+  // おつきさま(夜のタイトル・トグル用)
+  moon: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M40 7 a26 26 0 1 0 18 46 A22 22 0 0 1 40 7 z" fill="#ffe08a" stroke="#e6bf5c" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M50 12 l1.4 3.2 3.2 1.4 -3.2 1.4 -1.4 3.2 -1.4 -3.2 -3.2 -1.4 3.2 -1.4 z" fill="#fff3c4"/>
+    <circle cx="56" cy="26" r="1.6" fill="#fff3c4"/>
+  </svg>`,
+
 };
 
-const TASKS = [
-  { id: 'breakfast', label: 'あさごはん' },
-  { id: 'teeth',     label: 'はみがき' },
-  { id: 'sunscreen', label: 'ひやけどめ' },
-  { id: 'clothes',   label: 'おきがえ' },
-  { id: 'bugspray',  label: 'むしよけ<br>スプレー' },
-  { id: 'taion',     label: 'たいおん' },
-  { id: 'toilet',    label: 'トイレ' },
-  { id: 'socks',     label: 'くつした' },
-];
-// タスクのアイコン画像は images/<id>.png
-const KEY = 'asaboard-v1';
+// 朝・夜の2ボード。タスクのアイコン画像は images/<id>.png
+const BOARDS = {
+  morning: {
+    title: 'あさのじゅんびボード',
+    titleIcon: ICONS.sun,
+    cheer: 'すごい!いってらっしゃい!',
+    tasks: [
+      { id: 'breakfast', label: 'あさごはん' },
+      { id: 'teeth',     label: 'はみがき' },
+      { id: 'sunscreen', label: 'ひやけどめ' },
+      { id: 'clothes',   label: 'おきがえ' },
+      { id: 'bugspray',  label: 'むしよけ<br>スプレー' },
+      { id: 'taion',     label: 'たいおん' },
+      { id: 'toilet',    label: 'トイレ' },
+      { id: 'socks',     label: 'くつした' },
+    ],
+  },
+  night: {
+    title: 'よるのじゅんびボード',
+    titleIcon: ICONS.moon,
+    cheer: 'すごい!おやすみなさい!',
+    tasks: [
+      { id: 'teeth',  label: 'はみがき' },
+      { id: 'floss',  label: 'いとようじ' },
+      { id: 'toilet', label: 'トイレ' },
+    ],
+  },
+};
+const KEY = 'asaboard-v2';
 
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 }
 
+function freshState() {
+  return { date: todayStr(), morning: {}, night: {} };
+}
+
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && s.date === todayStr()) return s;
+    if (s && s.date === todayStr()) {
+      return { date: s.date, morning: s.morning || {}, night: s.night || {} };
+    }
   } catch (e) {}
-  return { date: todayStr(), done: {} };
+  return freshState();
 }
 
 let state = loadState();
+// 開いた時刻で初期表示を決める(14時以降は夜)。トグルでいつでも切替可
+let mode = (new Date().getHours() >= 14) ? 'night' : 'morning';
 
 function saveState() {
   state.date = todayStr();
   localStorage.setItem(KEY, JSON.stringify(state));
 }
+function curTasks() { return BOARDS[mode].tasks; }
+function curDone() { return state[mode]; }
 
 // 効果音(Web Audio・タップ時にピコン、コンプリートでファンファーレ)
 // iOSは指を離した操作(touchend/click)でしか音声を解錠できないため、
@@ -352,16 +434,31 @@ function beep(freqs, dur = 0.12, gap = 0.1) {
 const board = document.getElementById('board');
 const bar = document.getElementById('bar');
 const celebrate = document.getElementById('celebrate');
+const titleIconEl = document.getElementById('titleIcon');
+const titleTextEl = document.getElementById('titleText');
 
-document.getElementById('titleSun').innerHTML = ICONS.sun;
 document.getElementById('barMarker').innerHTML = ICONS.star;
 document.getElementById('celebrateIcon').innerHTML = '<img src="images/celebrate.png" alt="">';
+document.getElementById('mtSun').innerHTML = ICONS.sun;
+document.getElementById('mtMoon').innerHTML = ICONS.moon;
+
+function applyMode() {
+  const b = BOARDS[mode];
+  titleTextEl.textContent = b.title;
+  titleIconEl.innerHTML = b.titleIcon;
+  document.body.classList.toggle('night', mode === 'night');
+  document.documentElement.classList.toggle('night', mode === 'night');
+  board.style.setProperty('--cols', Math.min(b.tasks.length, 4));
+  document.querySelectorAll('.mode-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.mode === mode));
+}
 
 function render() {
+  const done = curDone();
   board.innerHTML = '';
-  TASKS.forEach((t, i) => {
+  curTasks().forEach((t, i) => {
     const div = document.createElement('div');
-    div.className = 'task' + (state.done[t.id] ? ' done' : '');
+    div.className = 'task' + (done[t.id] ? ' done' : '');
     div.innerHTML = `
       <span class="num">${i + 1}</span>
       <span class="icon"><img src="images/${t.id}.png" alt=""></span>
@@ -374,9 +471,10 @@ function render() {
 }
 
 function toggle(id) {
-  const wasDone = !!state.done[id];
-  state.done[id] = !wasDone;
-  if (!state.done[id]) delete state.done[id];
+  const done = curDone();
+  const wasDone = !!done[id];
+  done[id] = !wasDone;
+  if (!done[id]) delete done[id];
   saveState();
   render();
   if (!wasDone) {
@@ -386,16 +484,20 @@ function toggle(id) {
 }
 
 function allDone() {
-  return TASKS.every(t => state.done[t.id]);
+  const done = curDone();
+  return curTasks().every(t => done[t.id]);
 }
 
 function updateProgress() {
-  const n = TASKS.filter(t => state.done[t.id]).length;
-  bar.style.width = (n / TASKS.length * 100) + '%';
+  const done = curDone();
+  const ts = curTasks();
+  const n = ts.filter(t => done[t.id]).length;
+  bar.style.width = (n / ts.length * 100) + '%';
   bar.classList.toggle('walking', n > 0);
 }
 
 function showCelebrate() {
+  document.getElementById('celebrateMsg').textContent = BOARDS[mode].cheer;
   celebrate.classList.add('show');
   beep([523, 659, 784, 1047], 0.25, 0.15);
   const colors = ['#ff8c42', '#ffd166', '#e88aa5', '#7fd1e8', '#a5e09a', '#b89ae0'];
@@ -412,11 +514,20 @@ function showCelebrate() {
   }
 }
 
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  applyMode();
+  render();
+}
+document.querySelectorAll('.mode-btn').forEach(btn =>
+  btn.addEventListener('click', () => setMode(btn.dataset.mode)));
+
 celebrate.addEventListener('pointerdown', () => celebrate.classList.remove('show'));
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  if (confirm('チェックをぜんぶリセットする?')) {
-    state = { date: todayStr(), done: {} };
+  if (confirm('このボードのチェックをぜんぶリセットする?')) {
+    state[mode] = {};
     saveState();
     render();
   }
@@ -425,11 +536,13 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 // 日付が変わったら自動リセット(画面を開きっぱなしでも復帰時にチェック)
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && state.date !== todayStr()) {
-    state = { date: todayStr(), done: {} };
+    state = freshState();
     saveState();
     render();
   }
 });
+
+applyMode();
 
 render();
 </script>
