@@ -344,14 +344,14 @@
     <button class="mode-btn" data-mode="morning"><span class="mode-ic" id="mtSun"></span>あさ</button>
     <button class="mode-btn" data-mode="night"><span class="mode-ic" id="mtMoon"></span>よる</button>
   </div>
-  <h1><span id="titleIcon"></span><span id="titleText">あさのじゅんびボード</span></h1>
+  <h1><span id="titleText">あさのじゅんびボード</span></h1>
   <div class="progress-wrap"><div class="progress-bar" id="bar"><span class="marker" id="barMarker"></span></div></div>
 </header>
 
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v2.0</span>
+  <span class="version">v2.1</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -500,7 +500,6 @@ function beep(freqs, dur = 0.12, gap = 0.1) {
 const board = document.getElementById('board');
 const bar = document.getElementById('bar');
 const celebrate = document.getElementById('celebrate');
-const titleIconEl = document.getElementById('titleIcon');
 const titleTextEl = document.getElementById('titleText');
 
 document.getElementById('barMarker').innerHTML = ICONS.star;
@@ -526,7 +525,6 @@ document.getElementById('mtMoon').innerHTML = ICONS.moon;
 function applyMode() {
   const b = BOARDS[mode];
   titleTextEl.textContent = b.title;
-  titleIconEl.innerHTML = b.titleIcon;
   document.body.classList.toggle('night', mode === 'night');
   document.documentElement.classList.toggle('night', mode === 'night');
   board.style.setProperty('--cols', Math.min(b.tasks.length, 4));
