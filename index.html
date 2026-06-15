@@ -366,7 +366,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v2.8</span>
+  <span class="version">v2.9</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -464,8 +464,8 @@ function loadState() {
 }
 
 let state = loadState();
-// 開いた時刻で初期表示を決める(14時以降は夜)。トグルでいつでも切替可
-let mode = (new Date().getHours() >= 14) ? 'night' : 'morning';
+// 初期表示はつねに朝モード(夜はトグルで切替)
+let mode = 'morning';
 
 function saveState() {
   state.date = todayStr();
