@@ -11,7 +11,9 @@
 <title>あさのじゅんびボード</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; }
+  /* bodyはheight固定にしない(min-height:100%で中身の高さまで伸ばし、
+     スクロールしても背景グラデが途切れないようにする) */
+  html { height: 100%; }
   /* ビューポート誤認時の余白帯も背景と馴染ませる */
   html { background: #ddf1ff; }
   body {
@@ -369,7 +371,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v3.6</span>
+  <span class="version">v3.7</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
