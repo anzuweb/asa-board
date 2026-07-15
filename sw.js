@@ -1,10 +1,11 @@
 // あさ/よる じゅんびボード - オフライン用 Service Worker
 // 画像はキャッシュ優先で読み込むため、ネットが不安定でもイラストが消えない。
 // 画像を差し替えたら CACHE のバージョン名を上げること(例: v2 → v3)。
-const CACHE = 'asaboard-v2';
+const CACHE = 'asaboard-v3';
 const ASSETS = [
   './',
   './index.html',
+  './images/hanky.png',
   './images/dinner.png',
   './images/bath.png',
   './images/breakfast.png',

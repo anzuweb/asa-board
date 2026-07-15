@@ -366,7 +366,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v3.1</span>
+  <span class="version">v3.2</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -428,6 +428,7 @@ const BOARDS = {
       { id: 'taion',     label: 'たいおん' },
       { id: 'toilet',    label: 'トイレ' },
       { id: 'socks',     label: 'くつした' },
+      { id: 'hanky',     label: 'ハンカチ' },
     ],
   },
   night: {
@@ -554,10 +555,20 @@ function applyMode() {
   titleTextEl.textContent = b.title;
   document.body.classList.toggle('night', mode === 'night');
   document.documentElement.classList.toggle('night', mode === 'night');
-  board.style.setProperty('--cols', Math.min(b.tasks.length, 4));
+  board.style.setProperty('--cols', colsFor(b.tasks.length));
   document.querySelectorAll('.mode-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.mode === mode));
   placeThumb();
+}
+
+// 1段が最大5枚になるように、段数が最小＆バランスの良い列数を選ぶ
+// (例: 9個→5列[5+4]、8個→4列[4+4]、5個→5列[1段])
+function colsFor(n) {
+  for (let rows = 1; rows <= n; rows++) {
+    const c = Math.ceil(n / rows);
+    if (c <= 5) return c;
+  }
+  return 5;
 }
 
 // 選択中のつまみを、選択ボタンの位置・大きさに合わせて配置(切替時はスライド)
