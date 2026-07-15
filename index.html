@@ -366,7 +366,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v3.4</span>
+  <span class="version">v3.5</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -597,7 +597,8 @@ function render() {
       <span class="icon"><img src="images/${t.id}.png" alt=""></span>
       <span class="label">${t.label}</span>
       <span class="stamp">${ICONS.stamp}</span>`;
-    div.addEventListener('pointerdown', () => toggle(t.id));
+    // スクロール中の誤タップを防ぐため click を使う(指が動いたら発火しない)
+    div.addEventListener('click', () => toggle(t.id));
     board.appendChild(div);
   });
   updateProgress();
@@ -657,7 +658,7 @@ function setMode(m) {
 document.querySelectorAll('.mode-btn').forEach(btn =>
   btn.addEventListener('click', () => setMode(btn.dataset.mode)));
 
-celebrate.addEventListener('pointerdown', () => celebrate.classList.remove('show'));
+celebrate.addEventListener('click', () => celebrate.classList.remove('show'));
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   if (confirm('このボードのチェックをぜんぶリセットする?')) {
