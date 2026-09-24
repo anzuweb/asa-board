@@ -103,6 +103,7 @@
     box-shadow: 0 4px 0 #f0d9b8;
     transition: transform .15s, opacity .3s, border-color .3s;
     position: relative;
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -135,7 +136,9 @@
   }
   .task .label {
     flex-shrink: 0;
-    font-size: clamp(16px, 2.6vw, 28px);
+    /* カード幅に合わせて縮め、「あさごは/ん」のような途中改行を防ぐ */
+    font-size: clamp(14px, 14cqi, 28px);
+    white-space: nowrap;
     font-weight: bold;
     color: #5b4a3a;
     letter-spacing: 1px;
@@ -433,7 +436,7 @@
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v3.9</span>
+  <span class="version">v4.0</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -497,6 +500,7 @@ const BOARDS = {
       { id: 'socks',     label: 'くつした' },
       { id: 'hanky',     label: 'ハンカチ' },
       { id: 'nafuda',    label: 'なふだ' },
+      { id: 'tsume',     label: 'つめ' },
     ],
   },
   night: {
@@ -632,12 +636,16 @@ function applyMode() {
 
 // 1段が最大5枚になるように、段数が最小＆バランスの良い列数を選ぶ
 // (例: 9個→5列[5+4]、8個→4列[4+4]、5個→5列[1段])
+// 横向き: 1段最大5枚(11個以上は6枚にして2段に収める)
+// 縦向き: 細長いカードにならないよう1段最大4枚
 function colsFor(n) {
+  const portrait = innerHeight > innerWidth;
+  const max = portrait ? 4 : (n > 10 ? 6 : 5);
   for (let rows = 1; rows <= n; rows++) {
     const c = Math.ceil(n / rows);
-    if (c <= 5) return c;
+    if (c <= max) return c;
   }
-  return 5;
+  return max;
 }
 
 // 選択中のつまみを、選択ボタンの位置・大きさに合わせて配置(切替時はスライド)
@@ -652,7 +660,11 @@ function placeThumb() {
   thumb.style.background = mode === 'night' ? '#7a6ad6' : '#ff8c42';
   if (firstThumb) { void thumb.offsetWidth; thumb.style.transition = ''; firstThumb = false; }
 }
-window.addEventListener('resize', placeThumb);
+window.addEventListener('resize', () => {
+  // 画面の向きが変わったら列数も計算し直す
+  board.style.setProperty('--cols', colsFor(BOARDS[mode].tasks.length));
+  placeThumb();
+});
 
 function render() {
   const done = curDone();
