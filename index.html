@@ -537,6 +537,47 @@
   .book-day .d { font-size: 11px; line-height: 1.2; color: #b8a890; font-weight: bold; }
   .book-day svg { width: 60%; height: auto; }
   .book-day .t { font-size: 10px; font-weight: bold; color: #8a7a68; }
+  /* 長押し中はマスを少し沈ませて「押してる」ことを伝える */
+  .book-day.has-stamp { -webkit-touch-callout: none; transition: transform .2s; }
+  .book-day.pressing { transform: scale(.88); }
+
+  /* おうちのひと用メニュー(スタンプの長押しで開く) */
+  .stamp-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 13;
+    background: rgba(60, 50, 40, .45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .stamp-menu.show { display: flex; }
+  .stamp-menu-card {
+    width: min(340px, 100%);
+    background: #fff;
+    border-radius: 20px;
+    padding: 18px 16px 14px;
+    color: #5b4a3a;
+    text-align: center;
+  }
+  .stamp-menu-card h3 { font-size: 17px; margin-bottom: 4px; }
+  .stamp-menu-card .info { font-size: 13px; color: #8a7a68; margin-bottom: 14px; }
+  .stamp-menu-card button {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .sm-toggle { background: #fff3d6; color: #b07a0c; }
+  .sm-delete { background: #fde8e7; color: #c8433d; }
+  .sm-cancel { background: #f1ede7; color: #8a7a68; }
   .book-close {
     margin-top: 14px;
     border: none; background: #ff8c42; color: #fff;
@@ -573,7 +614,7 @@
 
 <footer>
   <button class="book-btn" id="bookBtn">スタンプちょう</button>
-  <span class="version">v4.1</span>
+  <span class="version">v4.2</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -596,6 +637,17 @@
     <p class="book-count" id="bookCount"></p>
     <div class="book-grid" id="bookGrid"></div>
     <button class="book-close" id="bookClose">とじる</button>
+  </div>
+</div>
+
+<!-- おうちのひと用: スタンプ帳でスタンプを長押しすると開く -->
+<div class="stamp-menu" id="stampMenu">
+  <div class="stamp-menu-card">
+    <h3 id="smTitle"></h3>
+    <p class="info" id="smInfo"></p>
+    <button class="sm-toggle" id="smToggle"></button>
+    <button class="sm-delete" id="smDelete">このスタンプを消す</button>
+    <button class="sm-cancel" id="smCancel">キャンセル</button>
   </div>
 </div>
 
@@ -1100,7 +1152,7 @@ function renderBook() {
     const key = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const st = stamps[key];
     if (st) { all++; if (st.gold) gold++; }
-    html += `<div class="book-day${key === todayKey ? ' today' : ''}"><span class="d">${day}</span>` +
+    html += `<div class="book-day${key === todayKey ? ' today' : ''}${st ? ' has-stamp' : ''}" data-key="${key}"><span class="d">${day}</span>` +
       (st ? (st.gold ? STAMP_SVG.gold : STAMP_SVG.normal) + `<span class="t">${st.time}</span>` : '') + '</div>';
   }
   document.getElementById('bookGrid').innerHTML = html;
@@ -1122,6 +1174,73 @@ document.getElementById('bookBtn').addEventListener('click', openBook);
 document.getElementById('bookPrev').addEventListener('click', () => moveBook(-1));
 document.getElementById('bookNext').addEventListener('click', () => moveBook(1));
 document.getElementById('bookClose').addEventListener('click', () => book.classList.remove('show'));
+
+// ===== おうちのひと用: スタンプの長押しで「金/ふつう切り替え」「削除」 =====
+// 子どもが遊びで消さないよう、ボタンは置かず長押し(1.5秒)でだけ開く
+const LONG_PRESS_MS = 1500;
+const stampMenu = document.getElementById('stampMenu');
+const bookGrid = document.getElementById('bookGrid');
+let pressTimer = null, pressCell = null, pressX = 0, pressY = 0, menuKey = null;
+
+function cancelPress() {
+  clearTimeout(pressTimer);
+  pressTimer = null;
+  if (pressCell) pressCell.classList.remove('pressing');
+  pressCell = null;
+}
+bookGrid.addEventListener('pointerdown', (e) => {
+  const cell = e.target.closest('.book-day.has-stamp');
+  if (!cell) return;
+  pressCell = cell;
+  pressX = e.clientX; pressY = e.clientY;
+  cell.classList.add('pressing');
+  pressTimer = setTimeout(() => {
+    const key = cell.dataset.key;
+    cancelPress();
+    openStampMenu(key);
+  }, LONG_PRESS_MS);
+});
+// 指が動いた(スクロール)・離した・外れたら長押しをやめる
+bookGrid.addEventListener('pointermove', (e) => {
+  if (pressTimer && Math.hypot(e.clientX - pressX, e.clientY - pressY) > 10) cancelPress();
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => bookGrid.addEventListener(ev, cancelPress));
+// iOSの長押しメニュー(コピー等)を出さない
+bookGrid.addEventListener('contextmenu', (e) => e.preventDefault());
+
+function openStampMenu(key) {
+  const st = loadStamps()[key];
+  if (!st) return;
+  menuKey = key;
+  const [, mm, dd] = key.split('-').map(Number);
+  document.getElementById('smTitle').textContent = `${mm}月${dd}日のスタンプ`;
+  document.getElementById('smInfo').textContent = `${st.time}に完了 / ${st.gold ? '金スタンプ' : 'ふつうのスタンプ'}`;
+  document.getElementById('smToggle').textContent = st.gold ? 'ふつうのスタンプにする' : '金スタンプにする';
+  stampMenu.classList.add('show');
+}
+function closeStampMenu() {
+  stampMenu.classList.remove('show');
+  menuKey = null;
+}
+function saveStamps(stamps) {
+  try { localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {}
+}
+document.getElementById('smToggle').addEventListener('click', () => {
+  const stamps = loadStamps();
+  if (stamps[menuKey]) { stamps[menuKey].gold = !stamps[menuKey].gold; saveStamps(stamps); }
+  closeStampMenu();
+  renderBook();
+});
+document.getElementById('smDelete').addEventListener('click', () => {
+  if (!confirm('このスタンプを消しますか?(元にはもどせません)')) return;
+  const stamps = loadStamps();
+  delete stamps[menuKey];
+  saveStamps(stamps);
+  closeStampMenu();
+  renderBook();
+});
+document.getElementById('smCancel').addEventListener('click', closeStampMenu);
+stampMenu.addEventListener('click', (e) => { if (e.target === stampMenu) closeStampMenu(); });
 
 updateClock();
 setInterval(updateClock, 10000);
