@@ -410,6 +410,141 @@
     cursor: pointer;
     font-family: inherit;
   }
+
+  /* ===== 朝の時計(7時〜8時の残り時間を扇形で見せる) ===== */
+  .clock-box {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 4px auto 6px;
+    pointer-events: none;
+  }
+  body:not(.night) .clock-box { display: flex; }
+  .clock-box svg { width: 64px; height: auto; flex-shrink: 0; }
+  .clock-text {
+    font-size: 15px;
+    font-weight: bold;
+    color: #e8743a;
+    background: #ffffffcc;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  /* iPad以上は左上に固定(レイアウトの高さを食わないように) */
+  @media (min-width: 700px) {
+    .clock-box {
+      position: fixed;
+      top: 10px;
+      left: 12px;
+      z-index: 2;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+    }
+    .clock-box svg { width: clamp(72px, 8vw, 104px); }
+    .clock-text { font-size: clamp(13px, 1.5vw, 18px); }
+  }
+
+  /* 7:50のお知らせ */
+  .toast {
+    position: fixed;
+    left: 50%;
+    top: 22%;
+    transform: translate(-50%, -20px);
+    z-index: 9;
+    background: #fff;
+    color: #e8743a;
+    border: 4px solid #ffb877;
+    font-size: clamp(20px, 4vw, 34px);
+    font-weight: bold;
+    padding: 14px 28px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .4s, transform .4s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* スタンプ帳ボタン */
+  .book-btn {
+    border: none;
+    background: #ff8c42;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 3px 0 #e0702a;
+    margin-right: auto;
+  }
+  body.night .book-btn { background: #7a6ad6; box-shadow: 0 3px 0 #5a4bb5; }
+
+  /* スタンプ帳(カレンダー) */
+  .book {
+    position: fixed;
+    inset: 0;
+    z-index: 12;
+    background: rgba(255, 248, 236, .97);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  .book.show { display: flex; }
+  .book-card {
+    width: min(640px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    background: #fff;
+    border: 4px solid #ffe0b3;
+    border-radius: 24px;
+    padding: 16px;
+    color: #5b4a3a;
+    text-align: center;
+  }
+  .book-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .book-head h2 { font-size: clamp(18px, 4vw, 26px); }
+  .book-nav {
+    border: none; background: #fff3e3; color: #e8743a;
+    font-size: 20px; font-weight: bold; width: 44px; height: 44px;
+    border-radius: 50%; cursor: pointer; font-family: inherit;
+  }
+  .book-nav:disabled { opacity: .3; cursor: default; }
+  .book-count { margin: 8px 0 12px; font-size: 14px; font-weight: bold; }
+  .book-count .gold { color: #d4920f; }
+  .book-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .book-wd { font-size: 12px; font-weight: bold; padding-bottom: 2px; }
+  .book-wd.sun { color: #e8504a; }
+  .book-wd.sat { color: #4a86bf; }
+  /* マスの中は「日付 → スタンプ → 時刻」の縦並び(小さい画面でも重ならない) */
+  .book-day {
+    aspect-ratio: 1 / 1.3;
+    background: #fffaf3;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 3px;
+    gap: 1px;
+  }
+  .book-day.today { outline: 3px solid #ffb877; }
+  .book-day .d { font-size: 11px; line-height: 1.2; color: #b8a890; font-weight: bold; }
+  .book-day svg { width: 60%; height: auto; }
+  .book-day .t { font-size: 10px; font-weight: bold; color: #8a7a68; }
+  .book-close {
+    margin-top: 14px;
+    border: none; background: #ff8c42; color: #fff;
+    font-size: 17px; font-weight: bold; padding: 10px 36px;
+    border-radius: 999px; cursor: pointer; font-family: inherit;
+  }
+  #celebrateStamp { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-weight: bold; color: #d4920f; font-size: clamp(18px, 3vw, 26px); }
+  #celebrateStamp svg { width: 44px; height: 44px; }
 </style>
 </head>
 <body>
@@ -430,13 +565,15 @@
     <button class="mode-btn" data-mode="night"><span class="mode-ic" id="mtMoon"></span>よる</button>
   </div>
   <h1><span id="titleText">あさのじゅんびボード</span></h1>
+  <div class="clock-box" id="clockBox"><span id="clockSvg"></span><span class="clock-text" id="clockText"></span></div>
   <div class="progress-wrap"><div class="progress-bar" id="bar"><span class="marker" id="barMarker"></span></div></div>
 </header>
 
 <main class="board" id="board"></main>
 
 <footer>
-  <span class="version">v4.0</span>
+  <button class="book-btn" id="bookBtn">スタンプちょう</button>
+  <span class="version">v4.1</span>
   <button class="reset-btn" id="resetBtn">やりなおす</button>
 </footer>
 
@@ -444,6 +581,22 @@
   <div class="big" id="celebrateIcon"></div>
   <h2>ぜんぶできたね!</h2>
   <p id="celebrateMsg">すごい!いってらっしゃい!</p>
+  <div id="celebrateStamp"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="book" id="book">
+  <div class="book-card">
+    <div class="book-head">
+      <button class="book-nav" id="bookPrev" aria-label="まえのつき">&lt;</button>
+      <h2 id="bookTitle"></h2>
+      <button class="book-nav" id="bookNext" aria-label="つぎのつき">&gt;</button>
+    </div>
+    <p class="book-count" id="bookCount"></p>
+    <div class="book-grid" id="bookGrid"></div>
+    <button class="book-close" id="bookClose">とじる</button>
+  </div>
 </div>
 
 <script>
@@ -693,8 +846,13 @@ function toggle(id) {
   render();
   if (!wasDone) {
     beep([880, 1320]);
-    if (allDone()) setTimeout(showCelebrate, 350);
+    if (allDone()) {
+      // 朝の準備がぜんぶ終わったら、その日のスタンプを記録(1日1個)
+      lastStamp = mode === 'morning' ? recordStamp() : null;
+      setTimeout(showCelebrate, 350);
+    }
   }
+  updateClock();
 }
 
 function allDone() {
@@ -713,6 +871,10 @@ function updateProgress() {
 function showCelebrate() {
   document.getElementById('celebrateIcon').innerHTML = '<img src="' + BOARDS[mode].celebrateImg + '" alt="">';
   document.getElementById('celebrateMsg').textContent = BOARDS[mode].cheer;
+  const cs = document.getElementById('celebrateStamp');
+  cs.innerHTML = lastStamp
+    ? (lastStamp.gold ? STAMP_SVG.gold + 'きんのスタンプ ゲット!' : STAMP_SVG.normal + 'スタンプ ゲット!')
+    : '';
   celebrate.classList.add('show');
   beep([523, 659, 784, 1047], 0.25, 0.15);
   const colors = ['#ff8c42', '#ffd166', '#e88aa5', '#7fd1e8', '#a5e09a', '#b89ae0'];
@@ -799,6 +961,170 @@ function spawnShootingStar() {
   spawnShootingStar();
   setTimeout(loopStar, 8000 + Math.random() * 10000);
 })();
+
+// ===== 時刻 (テスト用: URLに ?now=07:45 を付けるとその時刻として動く) =====
+const NOW_PARAM = new URLSearchParams(location.search).get('now');
+function now() {
+  const d = new Date();
+  if (NOW_PARAM && /^\d{1,2}:\d{2}$/.test(NOW_PARAM)) {
+    const [h, m] = NOW_PARAM.split(':').map(Number);
+    d.setHours(h, m, 0, 0);
+  }
+  return d;
+}
+const START_MIN = 7 * 60;   // 7:00 からスタート
+const GOAL_MIN = 8 * 60;    // 8:00 までに終わったら金スタンプ
+
+function morningAllDone() {
+  return BOARDS.morning.tasks.every(t => state.morning[t.id]);
+}
+
+// アナログ時計を描く。7:00〜8:00 の間は「8時までの残り」を扇形で塗る
+function clockSvg(d) {
+  const h = d.getHours(), m = d.getMinutes(), sec = d.getSeconds();
+  const total = h * 60 + m;
+  const pt = (deg, r) => {
+    const a = (deg - 90) * Math.PI / 180;
+    return [(50 + r * Math.cos(a)).toFixed(2), (50 + r * Math.sin(a)).toFixed(2)];
+  };
+  let wedge = '';
+  if (total >= START_MIN && total < GOAL_MIN) {
+    const a0 = (m + sec / 60) * 6;              // いまの分針の角度
+    const [x0, y0] = pt(a0, 40);
+    const [x1, y1] = pt(359.99, 40);           // 12時(=8:00)まで
+    const large = (360 - a0) > 180 ? 1 : 0;
+    wedge = `<path d="M50 50 L${x0} ${y0} A40 40 0 ${large} 1 ${x1} ${y1} Z" fill="#ffc9a3"/>`;
+  }
+  let ticks = '';
+  for (let i = 0; i < 12; i++) {
+    const [ax, ay] = pt(i * 30, 41), [bx, by] = pt(i * 30, i % 3 === 0 ? 34 : 37);
+    ticks += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#c9a87a" stroke-width="${i % 3 === 0 ? 3 : 2}" stroke-linecap="round"/>`;
+  }
+  const [hx, hy] = pt(((h % 12) + m / 60) * 30, 22);
+  const [mx, my] = pt((m + sec / 60) * 6, 33);
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="#fff" stroke="#ffb877" stroke-width="5"/>
+    ${wedge}${ticks}
+    <line x1="50" y1="50" x2="${hx}" y2="${hy}" stroke="#5b4a3a" stroke-width="6" stroke-linecap="round"/>
+    <line x1="50" y1="50" x2="${mx}" y2="${my}" stroke="#5b4a3a" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="50" cy="50" r="4" fill="#e8743a"/>
+  </svg>`;
+}
+
+function updateClock() {
+  const d = now();
+  const total = d.getHours() * 60 + d.getMinutes();
+  document.getElementById('clockSvg').innerHTML = clockSvg(d);
+  let text;
+  if (morningAllDone()) text = 'ぜんぶ できたね!';
+  else if (total < START_MIN) text = '7じから スタート';
+  else if (total < GOAL_MIN) text = `あと ${GOAL_MIN - total}ぷん`;
+  else text = '8じに なったよ';
+  document.getElementById('clockText').textContent = text;
+  checkNotice(d, total);
+}
+
+// 7:50 になってもまだ終わっていなければ、1日1回だけお知らせ
+const NOTICE_KEY = 'asaboard-notice';
+function checkNotice(d, total) {
+  if (mode !== 'morning' || morningAllDone()) return;
+  if (total < GOAL_MIN - 10 || total >= GOAL_MIN) return;
+  const key = dateKey(d);
+  try { if (localStorage.getItem(NOTICE_KEY) === key) return; localStorage.setItem(NOTICE_KEY, key); } catch (e) {}
+  showToast('もうすぐ 8じだよ!');
+  beep([784, 659, 784, 659], 0.18, 0.2);
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 6000);
+}
+
+// ===== スタンプ =====
+const STAMP_KEY = 'asaboard-stamps';
+const STAMP_SVG = {
+  gold: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="24" r="21" fill="#ffd166" stroke="#e0a526" stroke-width="3"/>
+    <circle cx="24" cy="24" r="15" fill="none" stroke="#fff3c4" stroke-width="2" stroke-dasharray="3 3"/>
+    <path d="M24 12 l3.4 7.4 8 .8 -6 5.4 1.8 7.9 -7.2-4.2 -7.2 4.2 1.8-7.9 -6-5.4 8-.8z" fill="#fff" stroke="#e0a526" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>`,
+  normal: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="24" r="21" fill="#ffd1dd" stroke="#e88aa5" stroke-width="3"/>
+    <path d="M15 24.5 l6 6 12-13" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M15 24.5 l6 6 12-13" fill="none" stroke="#e88aa5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`,
+};
+let lastStamp = null;
+
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function loadStamps() {
+  try { return JSON.parse(localStorage.getItem(STAMP_KEY)) || {}; } catch (e) { return {}; }
+}
+// その日のスタンプを記録。すでにあれば最初の記録を残す(やりなおしても上書きしない)
+function recordStamp() {
+  const stamps = loadStamps();
+  const d = now();
+  const key = dateKey(d);
+  if (!stamps[key]) {
+    const total = d.getHours() * 60 + d.getMinutes();
+    stamps[key] = { time: `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`, gold: total < GOAL_MIN };
+    try { localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {}
+  }
+  return stamps[key];
+}
+
+// ===== スタンプ帳(カレンダー) =====
+const book = document.getElementById('book');
+let bookYM = null;
+function openBook() {
+  const d = now();
+  bookYM = { y: d.getFullYear(), m: d.getMonth() };
+  renderBook();
+  book.classList.add('show');
+}
+function renderBook() {
+  const { y, m } = bookYM;
+  const stamps = loadStamps();
+  const todayKey = dateKey(now());
+  document.getElementById('bookTitle').textContent = `${y}ねん ${m + 1}がつ`;
+  const firstWd = new Date(y, m, 1).getDay();
+  const days = new Date(y, m + 1, 0).getDate();
+  let html = ['にち', 'げつ', 'か', 'すい', 'もく', 'きん', 'ど']
+    .map((w, i) => `<div class="book-wd${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('');
+  for (let i = 0; i < firstWd; i++) html += '<div></div>';
+  let gold = 0, all = 0;
+  for (let day = 1; day <= days; day++) {
+    const key = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const st = stamps[key];
+    if (st) { all++; if (st.gold) gold++; }
+    html += `<div class="book-day${key === todayKey ? ' today' : ''}"><span class="d">${day}</span>` +
+      (st ? (st.gold ? STAMP_SVG.gold : STAMP_SVG.normal) + `<span class="t">${st.time}</span>` : '') + '</div>';
+  }
+  document.getElementById('bookGrid').innerHTML = html;
+  document.getElementById('bookCount').innerHTML =
+    `スタンプ ${all}こ (<span class="gold">きん ${gold}こ</span>)`;
+  // 未来の月へは進めない
+  const n = now();
+  document.getElementById('bookNext').disabled = (y > n.getFullYear()) || (y === n.getFullYear() && m >= n.getMonth());
+}
+function moveBook(diff) {
+  let { y, m } = bookYM;
+  m += diff;
+  if (m < 0) { m = 11; y--; }
+  if (m > 11) { m = 0; y++; }
+  bookYM = { y, m };
+  renderBook();
+}
+document.getElementById('bookBtn').addEventListener('click', openBook);
+document.getElementById('bookPrev').addEventListener('click', () => moveBook(-1));
+document.getElementById('bookNext').addEventListener('click', () => moveBook(1));
+document.getElementById('bookClose').addEventListener('click', () => book.classList.remove('show'));
+
+updateClock();
+setInterval(updateClock, 10000);
 
 // オフライン用Service Worker(ネット不安定時もイラストが消えないように)
 if ('serviceWorker' in navigator) {
